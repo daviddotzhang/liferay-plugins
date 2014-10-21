@@ -1,4 +1,5 @@
 @import "compass";
+@import "mixins";
 
 .so-announcements-portlet {
 	.back-link {
@@ -172,7 +173,9 @@
 		}
 
 		.toggler-content-collapsed {
-			display: none;
+			display: block;
+			height: 0;
+			overflow: hidden;
 		}
 
 		.entry {
@@ -283,7 +286,7 @@
 
 /* ---------- Responsive ---------- */
 
-@media (max-width: 767px) {
+@include respond-to(phone) {
 	.so-announcements-portlet {
 		.user-portrait {
 			position: relative;
@@ -297,6 +300,7 @@
 		.entry-block {
 			float: left;
 			margin-left: 0;
+			width: 100%;
 		}
 	}
 }

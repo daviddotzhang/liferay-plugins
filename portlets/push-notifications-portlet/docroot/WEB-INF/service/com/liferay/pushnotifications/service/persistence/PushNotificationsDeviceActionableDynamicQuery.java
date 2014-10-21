@@ -15,19 +15,19 @@
 package com.liferay.pushnotifications.service.persistence;
 
 import com.liferay.portal.kernel.dao.orm.BaseActionableDynamicQuery;
-import com.liferay.portal.kernel.exception.SystemException;
 
 import com.liferay.pushnotifications.model.PushNotificationsDevice;
 import com.liferay.pushnotifications.service.PushNotificationsDeviceLocalServiceUtil;
 
 /**
  * @author Silvio Santos
+ * @deprecated As of 7.0.0, replaced by {@link PushNotificationsDeviceLocalServiceUtil#getActionableDynamicQuery()}
  * @generated
  */
+@Deprecated
 public abstract class PushNotificationsDeviceActionableDynamicQuery
 	extends BaseActionableDynamicQuery {
-	public PushNotificationsDeviceActionableDynamicQuery()
-		throws SystemException {
+	public PushNotificationsDeviceActionableDynamicQuery() {
 		setBaseLocalService(PushNotificationsDeviceLocalServiceUtil.getService());
 		setClass(PushNotificationsDevice.class);
 

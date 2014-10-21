@@ -14,6 +14,8 @@
 
 package com.liferay.sync.service.persistence.impl;
 
+import aQute.bnd.annotation.ProviderType;
+
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
@@ -22,21 +24,17 @@ import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.CacheModel;
-import com.liferay.portal.model.ModelListener;
 import com.liferay.portal.service.persistence.impl.BasePersistenceImpl;
 
 import com.liferay.sync.NoSuchDLObjectException;
@@ -47,9 +45,12 @@ import com.liferay.sync.service.persistence.SyncDLObjectPersistence;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -64,6 +65,7 @@ import java.util.Set;
  * @see SyncDLObjectUtil
  * @generated
  */
+@ProviderType
 public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObject>
 	implements SyncDLObjectPersistence {
 	/*
@@ -85,6 +87,612 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(SyncDLObjectModelImpl.ENTITY_CACHE_ENABLED,
 			SyncDLObjectModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
+	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_V_T = new FinderPath(SyncDLObjectModelImpl.ENTITY_CACHE_ENABLED,
+			SyncDLObjectModelImpl.FINDER_CACHE_ENABLED, SyncDLObjectImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByV_T",
+			new String[] {
+				String.class.getName(), String.class.getName(),
+				
+			Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			});
+	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_V_T = new FinderPath(SyncDLObjectModelImpl.ENTITY_CACHE_ENABLED,
+			SyncDLObjectModelImpl.FINDER_CACHE_ENABLED, SyncDLObjectImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByV_T",
+			new String[] { String.class.getName(), String.class.getName() },
+			SyncDLObjectModelImpl.VERSION_COLUMN_BITMASK |
+			SyncDLObjectModelImpl.TYPE_COLUMN_BITMASK |
+			SyncDLObjectModelImpl.COMPANYID_COLUMN_BITMASK |
+			SyncDLObjectModelImpl.MODIFIEDTIME_COLUMN_BITMASK |
+			SyncDLObjectModelImpl.REPOSITORYID_COLUMN_BITMASK);
+	public static final FinderPath FINDER_PATH_COUNT_BY_V_T = new FinderPath(SyncDLObjectModelImpl.ENTITY_CACHE_ENABLED,
+			SyncDLObjectModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByV_T",
+			new String[] { String.class.getName(), String.class.getName() });
+
+	/**
+	 * Returns all the sync d l objects where version = &#63; and type = &#63;.
+	 *
+	 * @param version the version
+	 * @param type the type
+	 * @return the matching sync d l objects
+	 */
+	@Override
+	public List<SyncDLObject> findByV_T(String version, String type) {
+		return findByV_T(version, type, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			null);
+	}
+
+	/**
+	 * Returns a range of all the sync d l objects where version = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.sync.model.impl.SyncDLObjectModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * </p>
+	 *
+	 * @param version the version
+	 * @param type the type
+	 * @param start the lower bound of the range of sync d l objects
+	 * @param end the upper bound of the range of sync d l objects (not inclusive)
+	 * @return the range of matching sync d l objects
+	 */
+	@Override
+	public List<SyncDLObject> findByV_T(String version, String type, int start,
+		int end) {
+		return findByV_T(version, type, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the sync d l objects where version = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.sync.model.impl.SyncDLObjectModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * </p>
+	 *
+	 * @param version the version
+	 * @param type the type
+	 * @param start the lower bound of the range of sync d l objects
+	 * @param end the upper bound of the range of sync d l objects (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching sync d l objects
+	 */
+	@Override
+	public List<SyncDLObject> findByV_T(String version, String type, int start,
+		int end, OrderByComparator<SyncDLObject> orderByComparator) {
+		boolean pagination = true;
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
+			pagination = false;
+			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_V_T;
+			finderArgs = new Object[] { version, type };
+		}
+		else {
+			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_V_T;
+			finderArgs = new Object[] {
+					version, type,
+					
+					start, end, orderByComparator
+				};
+		}
+
+		List<SyncDLObject> list = (List<SyncDLObject>)FinderCacheUtil.getResult(finderPath,
+				finderArgs, this);
+
+		if ((list != null) && !list.isEmpty()) {
+			for (SyncDLObject syncDLObject : list) {
+				if (!Validator.equals(version, syncDLObject.getVersion()) ||
+						!Validator.equals(type, syncDLObject.getType())) {
+					list = null;
+
+					break;
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler query = null;
+
+			if (orderByComparator != null) {
+				query = new StringBundler(4 +
+						(orderByComparator.getOrderByFields().length * 3));
+			}
+			else {
+				query = new StringBundler(4);
+			}
+
+			query.append(_SQL_SELECT_SYNCDLOBJECT_WHERE);
+
+			boolean bindVersion = false;
+
+			if (version == null) {
+				query.append(_FINDER_COLUMN_V_T_VERSION_1);
+			}
+			else if (version.equals(StringPool.BLANK)) {
+				query.append(_FINDER_COLUMN_V_T_VERSION_3);
+			}
+			else {
+				bindVersion = true;
+
+				query.append(_FINDER_COLUMN_V_T_VERSION_2);
+			}
+
+			boolean bindType = false;
+
+			if (type == null) {
+				query.append(_FINDER_COLUMN_V_T_TYPE_1);
+			}
+			else if (type.equals(StringPool.BLANK)) {
+				query.append(_FINDER_COLUMN_V_T_TYPE_3);
+			}
+			else {
+				bindType = true;
+
+				query.append(_FINDER_COLUMN_V_T_TYPE_2);
+			}
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
+					orderByComparator);
+			}
+			else
+			 if (pagination) {
+				query.append(SyncDLObjectModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = query.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query q = session.createQuery(sql);
+
+				QueryPos qPos = QueryPos.getInstance(q);
+
+				if (bindVersion) {
+					qPos.add(version);
+				}
+
+				if (bindType) {
+					qPos.add(type);
+				}
+
+				if (!pagination) {
+					list = (List<SyncDLObject>)QueryUtil.list(q, getDialect(),
+							start, end, false);
+
+					Collections.sort(list);
+
+					list = Collections.unmodifiableList(list);
+				}
+				else {
+					list = (List<SyncDLObject>)QueryUtil.list(q, getDialect(),
+							start, end);
+				}
+
+				cacheResult(list);
+
+				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+			}
+			catch (Exception e) {
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
+
+				throw processException(e);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first sync d l object in the ordered set where version = &#63; and type = &#63;.
+	 *
+	 * @param version the version
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching sync d l object
+	 * @throws com.liferay.sync.NoSuchDLObjectException if a matching sync d l object could not be found
+	 */
+	@Override
+	public SyncDLObject findByV_T_First(String version, String type,
+		OrderByComparator<SyncDLObject> orderByComparator)
+		throws NoSuchDLObjectException {
+		SyncDLObject syncDLObject = fetchByV_T_First(version, type,
+				orderByComparator);
+
+		if (syncDLObject != null) {
+			return syncDLObject;
+		}
+
+		StringBundler msg = new StringBundler(6);
+
+		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		msg.append("version=");
+		msg.append(version);
+
+		msg.append(", type=");
+		msg.append(type);
+
+		msg.append(StringPool.CLOSE_CURLY_BRACE);
+
+		throw new NoSuchDLObjectException(msg.toString());
+	}
+
+	/**
+	 * Returns the first sync d l object in the ordered set where version = &#63; and type = &#63;.
+	 *
+	 * @param version the version
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching sync d l object, or <code>null</code> if a matching sync d l object could not be found
+	 */
+	@Override
+	public SyncDLObject fetchByV_T_First(String version, String type,
+		OrderByComparator<SyncDLObject> orderByComparator) {
+		List<SyncDLObject> list = findByV_T(version, type, 0, 1,
+				orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last sync d l object in the ordered set where version = &#63; and type = &#63;.
+	 *
+	 * @param version the version
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching sync d l object
+	 * @throws com.liferay.sync.NoSuchDLObjectException if a matching sync d l object could not be found
+	 */
+	@Override
+	public SyncDLObject findByV_T_Last(String version, String type,
+		OrderByComparator<SyncDLObject> orderByComparator)
+		throws NoSuchDLObjectException {
+		SyncDLObject syncDLObject = fetchByV_T_Last(version, type,
+				orderByComparator);
+
+		if (syncDLObject != null) {
+			return syncDLObject;
+		}
+
+		StringBundler msg = new StringBundler(6);
+
+		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		msg.append("version=");
+		msg.append(version);
+
+		msg.append(", type=");
+		msg.append(type);
+
+		msg.append(StringPool.CLOSE_CURLY_BRACE);
+
+		throw new NoSuchDLObjectException(msg.toString());
+	}
+
+	/**
+	 * Returns the last sync d l object in the ordered set where version = &#63; and type = &#63;.
+	 *
+	 * @param version the version
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching sync d l object, or <code>null</code> if a matching sync d l object could not be found
+	 */
+	@Override
+	public SyncDLObject fetchByV_T_Last(String version, String type,
+		OrderByComparator<SyncDLObject> orderByComparator) {
+		int count = countByV_T(version, type);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<SyncDLObject> list = findByV_T(version, type, count - 1, count,
+				orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the sync d l objects before and after the current sync d l object in the ordered set where version = &#63; and type = &#63;.
+	 *
+	 * @param syncDLObjectId the primary key of the current sync d l object
+	 * @param version the version
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next sync d l object
+	 * @throws com.liferay.sync.NoSuchDLObjectException if a sync d l object with the primary key could not be found
+	 */
+	@Override
+	public SyncDLObject[] findByV_T_PrevAndNext(long syncDLObjectId,
+		String version, String type,
+		OrderByComparator<SyncDLObject> orderByComparator)
+		throws NoSuchDLObjectException {
+		SyncDLObject syncDLObject = findByPrimaryKey(syncDLObjectId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			SyncDLObject[] array = new SyncDLObjectImpl[3];
+
+			array[0] = getByV_T_PrevAndNext(session, syncDLObject, version,
+					type, orderByComparator, true);
+
+			array[1] = syncDLObject;
+
+			array[2] = getByV_T_PrevAndNext(session, syncDLObject, version,
+					type, orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception e) {
+			throw processException(e);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected SyncDLObject getByV_T_PrevAndNext(Session session,
+		SyncDLObject syncDLObject, String version, String type,
+		OrderByComparator<SyncDLObject> orderByComparator, boolean previous) {
+		StringBundler query = null;
+
+		if (orderByComparator != null) {
+			query = new StringBundler(6 +
+					(orderByComparator.getOrderByFields().length * 6));
+		}
+		else {
+			query = new StringBundler(3);
+		}
+
+		query.append(_SQL_SELECT_SYNCDLOBJECT_WHERE);
+
+		boolean bindVersion = false;
+
+		if (version == null) {
+			query.append(_FINDER_COLUMN_V_T_VERSION_1);
+		}
+		else if (version.equals(StringPool.BLANK)) {
+			query.append(_FINDER_COLUMN_V_T_VERSION_3);
+		}
+		else {
+			bindVersion = true;
+
+			query.append(_FINDER_COLUMN_V_T_VERSION_2);
+		}
+
+		boolean bindType = false;
+
+		if (type == null) {
+			query.append(_FINDER_COLUMN_V_T_TYPE_1);
+		}
+		else if (type.equals(StringPool.BLANK)) {
+			query.append(_FINDER_COLUMN_V_T_TYPE_3);
+		}
+		else {
+			bindType = true;
+
+			query.append(_FINDER_COLUMN_V_T_TYPE_2);
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				query.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				query.append(_ORDER_BY_ENTITY_ALIAS);
+				query.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						query.append(WHERE_GREATER_THAN);
+					}
+					else {
+						query.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			query.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				query.append(_ORDER_BY_ENTITY_ALIAS);
+				query.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						query.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						query.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						query.append(ORDER_BY_ASC);
+					}
+					else {
+						query.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			query.append(SyncDLObjectModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = query.toString();
+
+		Query q = session.createQuery(sql);
+
+		q.setFirstResult(0);
+		q.setMaxResults(2);
+
+		QueryPos qPos = QueryPos.getInstance(q);
+
+		if (bindVersion) {
+			qPos.add(version);
+		}
+
+		if (bindType) {
+			qPos.add(type);
+		}
+
+		if (orderByComparator != null) {
+			Object[] values = orderByComparator.getOrderByConditionValues(syncDLObject);
+
+			for (Object value : values) {
+				qPos.add(value);
+			}
+		}
+
+		List<SyncDLObject> list = q.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the sync d l objects where version = &#63; and type = &#63; from the database.
+	 *
+	 * @param version the version
+	 * @param type the type
+	 */
+	@Override
+	public void removeByV_T(String version, String type) {
+		for (SyncDLObject syncDLObject : findByV_T(version, type,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+			remove(syncDLObject);
+		}
+	}
+
+	/**
+	 * Returns the number of sync d l objects where version = &#63; and type = &#63;.
+	 *
+	 * @param version the version
+	 * @param type the type
+	 * @return the number of matching sync d l objects
+	 */
+	@Override
+	public int countByV_T(String version, String type) {
+		FinderPath finderPath = FINDER_PATH_COUNT_BY_V_T;
+
+		Object[] finderArgs = new Object[] { version, type };
+
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
+				this);
+
+		if (count == null) {
+			StringBundler query = new StringBundler(3);
+
+			query.append(_SQL_COUNT_SYNCDLOBJECT_WHERE);
+
+			boolean bindVersion = false;
+
+			if (version == null) {
+				query.append(_FINDER_COLUMN_V_T_VERSION_1);
+			}
+			else if (version.equals(StringPool.BLANK)) {
+				query.append(_FINDER_COLUMN_V_T_VERSION_3);
+			}
+			else {
+				bindVersion = true;
+
+				query.append(_FINDER_COLUMN_V_T_VERSION_2);
+			}
+
+			boolean bindType = false;
+
+			if (type == null) {
+				query.append(_FINDER_COLUMN_V_T_TYPE_1);
+			}
+			else if (type.equals(StringPool.BLANK)) {
+				query.append(_FINDER_COLUMN_V_T_TYPE_3);
+			}
+			else {
+				bindType = true;
+
+				query.append(_FINDER_COLUMN_V_T_TYPE_2);
+			}
+
+			String sql = query.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query q = session.createQuery(sql);
+
+				QueryPos qPos = QueryPos.getInstance(q);
+
+				if (bindVersion) {
+					qPos.add(version);
+				}
+
+				if (bindType) {
+					qPos.add(type);
+				}
+
+				count = (Long)q.uniqueResult();
+
+				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+			}
+			catch (Exception e) {
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
+
+				throw processException(e);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_V_T_VERSION_1 = "syncDLObject.version IS NULL AND ";
+	private static final String _FINDER_COLUMN_V_T_VERSION_2 = "syncDLObject.version = ? AND ";
+	private static final String _FINDER_COLUMN_V_T_VERSION_3 = "(syncDLObject.version IS NULL OR syncDLObject.version = '') AND ";
+	private static final String _FINDER_COLUMN_V_T_TYPE_1 = "syncDLObject.type IS NULL";
+	private static final String _FINDER_COLUMN_V_T_TYPE_2 = "syncDLObject.type = ?";
+	private static final String _FINDER_COLUMN_V_T_TYPE_3 = "(syncDLObject.type IS NULL OR syncDLObject.type = '')";
 	public static final FinderPath FINDER_PATH_FETCH_BY_T_T = new FinderPath(SyncDLObjectModelImpl.ENTITY_CACHE_ENABLED,
 			SyncDLObjectModelImpl.FINDER_CACHE_ENABLED, SyncDLObjectImpl.class,
 			FINDER_CLASS_NAME_ENTITY, "fetchByT_T",
@@ -103,11 +711,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param typePK the type p k
 	 * @return the matching sync d l object
 	 * @throws com.liferay.sync.NoSuchDLObjectException if a matching sync d l object could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject findByT_T(String type, long typePK)
-		throws NoSuchDLObjectException, SystemException {
+		throws NoSuchDLObjectException {
 		SyncDLObject syncDLObject = fetchByT_T(type, typePK);
 
 		if (syncDLObject == null) {
@@ -139,11 +746,9 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param type the type
 	 * @param typePK the type p k
 	 * @return the matching sync d l object, or <code>null</code> if a matching sync d l object could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public SyncDLObject fetchByT_T(String type, long typePK)
-		throws SystemException {
+	public SyncDLObject fetchByT_T(String type, long typePK) {
 		return fetchByT_T(type, typePK, true);
 	}
 
@@ -154,11 +759,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param typePK the type p k
 	 * @param retrieveFromCache whether to use the finder cache
 	 * @return the matching sync d l object, or <code>null</code> if a matching sync d l object could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject fetchByT_T(String type, long typePK,
-		boolean retrieveFromCache) throws SystemException {
+		boolean retrieveFromCache) {
 		Object[] finderArgs = new Object[] { type, typePK };
 
 		Object result = null;
@@ -261,11 +865,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param type the type
 	 * @param typePK the type p k
 	 * @return the sync d l object that was removed
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject removeByT_T(String type, long typePK)
-		throws NoSuchDLObjectException, SystemException {
+		throws NoSuchDLObjectException {
 		SyncDLObject syncDLObject = findByT_T(type, typePK);
 
 		return remove(syncDLObject);
@@ -277,10 +880,9 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param type the type
 	 * @param typePK the type p k
 	 * @return the number of matching sync d l objects
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public int countByT_T(String type, long typePK) throws SystemException {
+	public int countByT_T(String type, long typePK) {
 		FinderPath finderPath = FINDER_PATH_COUNT_BY_T_T;
 
 		Object[] finderArgs = new Object[] { type, typePK };
@@ -370,11 +972,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param modifiedTime the modified time
 	 * @param repositoryId the repository ID
 	 * @return the matching sync d l objects
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public List<SyncDLObject> findByC_M_R(long companyId, long modifiedTime,
-		long repositoryId) throws SystemException {
+		long repositoryId) {
 		return findByC_M_R(companyId, modifiedTime, repositoryId,
 			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
@@ -392,11 +993,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param start the lower bound of the range of sync d l objects
 	 * @param end the upper bound of the range of sync d l objects (not inclusive)
 	 * @return the range of matching sync d l objects
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public List<SyncDLObject> findByC_M_R(long companyId, long modifiedTime,
-		long repositoryId, int start, int end) throws SystemException {
+		long repositoryId, int start, int end) {
 		return findByC_M_R(companyId, modifiedTime, repositoryId, start, end,
 			null);
 	}
@@ -415,12 +1015,11 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param end the upper bound of the range of sync d l objects (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching sync d l objects
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public List<SyncDLObject> findByC_M_R(long companyId, long modifiedTime,
 		long repositoryId, int start, int end,
-		OrderByComparator orderByComparator) throws SystemException {
+		OrderByComparator<SyncDLObject> orderByComparator) {
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
@@ -531,12 +1130,11 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching sync d l object
 	 * @throws com.liferay.sync.NoSuchDLObjectException if a matching sync d l object could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject findByC_M_R_First(long companyId, long modifiedTime,
-		long repositoryId, OrderByComparator orderByComparator)
-		throws NoSuchDLObjectException, SystemException {
+		long repositoryId, OrderByComparator<SyncDLObject> orderByComparator)
+		throws NoSuchDLObjectException {
 		SyncDLObject syncDLObject = fetchByC_M_R_First(companyId, modifiedTime,
 				repositoryId, orderByComparator);
 
@@ -570,12 +1168,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param repositoryId the repository ID
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching sync d l object, or <code>null</code> if a matching sync d l object could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject fetchByC_M_R_First(long companyId, long modifiedTime,
-		long repositoryId, OrderByComparator orderByComparator)
-		throws SystemException {
+		long repositoryId, OrderByComparator<SyncDLObject> orderByComparator) {
 		List<SyncDLObject> list = findByC_M_R(companyId, modifiedTime,
 				repositoryId, 0, 1, orderByComparator);
 
@@ -595,12 +1191,11 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching sync d l object
 	 * @throws com.liferay.sync.NoSuchDLObjectException if a matching sync d l object could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject findByC_M_R_Last(long companyId, long modifiedTime,
-		long repositoryId, OrderByComparator orderByComparator)
-		throws NoSuchDLObjectException, SystemException {
+		long repositoryId, OrderByComparator<SyncDLObject> orderByComparator)
+		throws NoSuchDLObjectException {
 		SyncDLObject syncDLObject = fetchByC_M_R_Last(companyId, modifiedTime,
 				repositoryId, orderByComparator);
 
@@ -634,12 +1229,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param repositoryId the repository ID
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching sync d l object, or <code>null</code> if a matching sync d l object could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject fetchByC_M_R_Last(long companyId, long modifiedTime,
-		long repositoryId, OrderByComparator orderByComparator)
-		throws SystemException {
+		long repositoryId, OrderByComparator<SyncDLObject> orderByComparator) {
 		int count = countByC_M_R(companyId, modifiedTime, repositoryId);
 
 		if (count == 0) {
@@ -666,13 +1259,12 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the previous, current, and next sync d l object
 	 * @throws com.liferay.sync.NoSuchDLObjectException if a sync d l object with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject[] findByC_M_R_PrevAndNext(long syncDLObjectId,
 		long companyId, long modifiedTime, long repositoryId,
-		OrderByComparator orderByComparator)
-		throws NoSuchDLObjectException, SystemException {
+		OrderByComparator<SyncDLObject> orderByComparator)
+		throws NoSuchDLObjectException {
 		SyncDLObject syncDLObject = findByPrimaryKey(syncDLObjectId);
 
 		Session session = null;
@@ -702,7 +1294,8 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 
 	protected SyncDLObject getByC_M_R_PrevAndNext(Session session,
 		SyncDLObject syncDLObject, long companyId, long modifiedTime,
-		long repositoryId, OrderByComparator orderByComparator, boolean previous) {
+		long repositoryId, OrderByComparator<SyncDLObject> orderByComparator,
+		boolean previous) {
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
@@ -819,11 +1412,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param companyId the company ID
 	 * @param modifiedTime the modified time
 	 * @param repositoryId the repository ID
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public void removeByC_M_R(long companyId, long modifiedTime,
-		long repositoryId) throws SystemException {
+		long repositoryId) {
 		for (SyncDLObject syncDLObject : findByC_M_R(companyId, modifiedTime,
 				repositoryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
 			remove(syncDLObject);
@@ -837,11 +1429,9 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param modifiedTime the modified time
 	 * @param repositoryId the repository ID
 	 * @return the number of matching sync d l objects
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public int countByC_M_R(long companyId, long modifiedTime, long repositoryId)
-		throws SystemException {
+	public int countByC_M_R(long companyId, long modifiedTime, long repositoryId) {
 		FinderPath finderPath = FINDER_PATH_WITH_PAGINATION_COUNT_BY_C_M_R;
 
 		Object[] finderArgs = new Object[] { companyId, modifiedTime, repositoryId };
@@ -1061,11 +1651,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param syncDLObjectId the primary key of the sync d l object
 	 * @return the sync d l object that was removed
 	 * @throws com.liferay.sync.NoSuchDLObjectException if a sync d l object with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject remove(long syncDLObjectId)
-		throws NoSuchDLObjectException, SystemException {
+		throws NoSuchDLObjectException {
 		return remove((Serializable)syncDLObjectId);
 	}
 
@@ -1075,11 +1664,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param primaryKey the primary key of the sync d l object
 	 * @return the sync d l object that was removed
 	 * @throws com.liferay.sync.NoSuchDLObjectException if a sync d l object with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject remove(Serializable primaryKey)
-		throws NoSuchDLObjectException, SystemException {
+		throws NoSuchDLObjectException {
 		Session session = null;
 
 		try {
@@ -1111,8 +1699,7 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	}
 
 	@Override
-	protected SyncDLObject removeImpl(SyncDLObject syncDLObject)
-		throws SystemException {
+	protected SyncDLObject removeImpl(SyncDLObject syncDLObject) {
 		syncDLObject = toUnwrappedModel(syncDLObject);
 
 		Session session = null;
@@ -1145,11 +1732,12 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 
 	@Override
 	public SyncDLObject updateImpl(
-		com.liferay.sync.model.SyncDLObject syncDLObject)
-		throws SystemException {
+		com.liferay.sync.model.SyncDLObject syncDLObject) {
 		syncDLObject = toUnwrappedModel(syncDLObject);
 
 		boolean isNew = syncDLObject.isNew();
+
+		SyncDLObjectModelImpl syncDLObjectModelImpl = (SyncDLObjectModelImpl)syncDLObject;
 
 		Session session = null;
 
@@ -1176,6 +1764,29 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 
 		if (isNew || !SyncDLObjectModelImpl.COLUMN_BITMASK_ENABLED) {
 			FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		}
+
+		else {
+			if ((syncDLObjectModelImpl.getColumnBitmask() &
+					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_V_T.getColumnBitmask()) != 0) {
+				Object[] args = new Object[] {
+						syncDLObjectModelImpl.getOriginalVersion(),
+						syncDLObjectModelImpl.getOriginalType()
+					};
+
+				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_V_T, args);
+				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_V_T,
+					args);
+
+				args = new Object[] {
+						syncDLObjectModelImpl.getVersion(),
+						syncDLObjectModelImpl.getType()
+					};
+
+				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_V_T, args);
+				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_V_T,
+					args);
+			}
 		}
 
 		EntityCacheUtil.putResult(SyncDLObjectModelImpl.ENTITY_CACHE_ENABLED,
@@ -1232,11 +1843,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param primaryKey the primary key of the sync d l object
 	 * @return the sync d l object
 	 * @throws com.liferay.sync.NoSuchDLObjectException if a sync d l object with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject findByPrimaryKey(Serializable primaryKey)
-		throws NoSuchDLObjectException, SystemException {
+		throws NoSuchDLObjectException {
 		SyncDLObject syncDLObject = fetchByPrimaryKey(primaryKey);
 
 		if (syncDLObject == null) {
@@ -1257,11 +1867,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param syncDLObjectId the primary key of the sync d l object
 	 * @return the sync d l object
 	 * @throws com.liferay.sync.NoSuchDLObjectException if a sync d l object with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public SyncDLObject findByPrimaryKey(long syncDLObjectId)
-		throws NoSuchDLObjectException, SystemException {
+		throws NoSuchDLObjectException {
 		return findByPrimaryKey((Serializable)syncDLObjectId);
 	}
 
@@ -1270,11 +1879,9 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 *
 	 * @param primaryKey the primary key of the sync d l object
 	 * @return the sync d l object, or <code>null</code> if a sync d l object with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public SyncDLObject fetchByPrimaryKey(Serializable primaryKey)
-		throws SystemException {
+	public SyncDLObject fetchByPrimaryKey(Serializable primaryKey) {
 		SyncDLObject syncDLObject = (SyncDLObject)EntityCacheUtil.getResult(SyncDLObjectModelImpl.ENTITY_CACHE_ENABLED,
 				SyncDLObjectImpl.class, primaryKey);
 
@@ -1318,22 +1925,111 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 *
 	 * @param syncDLObjectId the primary key of the sync d l object
 	 * @return the sync d l object, or <code>null</code> if a sync d l object with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public SyncDLObject fetchByPrimaryKey(long syncDLObjectId)
-		throws SystemException {
+	public SyncDLObject fetchByPrimaryKey(long syncDLObjectId) {
 		return fetchByPrimaryKey((Serializable)syncDLObjectId);
+	}
+
+	@Override
+	public Map<Serializable, SyncDLObject> fetchByPrimaryKeys(
+		Set<Serializable> primaryKeys) {
+		if (primaryKeys.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		Map<Serializable, SyncDLObject> map = new HashMap<Serializable, SyncDLObject>();
+
+		if (primaryKeys.size() == 1) {
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			Serializable primaryKey = iterator.next();
+
+			SyncDLObject syncDLObject = fetchByPrimaryKey(primaryKey);
+
+			if (syncDLObject != null) {
+				map.put(primaryKey, syncDLObject);
+			}
+
+			return map;
+		}
+
+		Set<Serializable> uncachedPrimaryKeys = null;
+
+		for (Serializable primaryKey : primaryKeys) {
+			SyncDLObject syncDLObject = (SyncDLObject)EntityCacheUtil.getResult(SyncDLObjectModelImpl.ENTITY_CACHE_ENABLED,
+					SyncDLObjectImpl.class, primaryKey);
+
+			if (syncDLObject == null) {
+				if (uncachedPrimaryKeys == null) {
+					uncachedPrimaryKeys = new HashSet<Serializable>();
+				}
+
+				uncachedPrimaryKeys.add(primaryKey);
+			}
+			else {
+				map.put(primaryKey, syncDLObject);
+			}
+		}
+
+		if (uncachedPrimaryKeys == null) {
+			return map;
+		}
+
+		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
+				1);
+
+		query.append(_SQL_SELECT_SYNCDLOBJECT_WHERE_PKS_IN);
+
+		for (Serializable primaryKey : uncachedPrimaryKeys) {
+			query.append(String.valueOf(primaryKey));
+
+			query.append(StringPool.COMMA);
+		}
+
+		query.setIndex(query.index() - 1);
+
+		query.append(StringPool.CLOSE_PARENTHESIS);
+
+		String sql = query.toString();
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Query q = session.createQuery(sql);
+
+			for (SyncDLObject syncDLObject : (List<SyncDLObject>)q.list()) {
+				map.put(syncDLObject.getPrimaryKeyObj(), syncDLObject);
+
+				cacheResult(syncDLObject);
+
+				uncachedPrimaryKeys.remove(syncDLObject.getPrimaryKeyObj());
+			}
+
+			for (Serializable primaryKey : uncachedPrimaryKeys) {
+				EntityCacheUtil.putResult(SyncDLObjectModelImpl.ENTITY_CACHE_ENABLED,
+					SyncDLObjectImpl.class, primaryKey, _nullSyncDLObject);
+			}
+		}
+		catch (Exception e) {
+			throw processException(e);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return map;
 	}
 
 	/**
 	 * Returns all the sync d l objects.
 	 *
 	 * @return the sync d l objects
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public List<SyncDLObject> findAll() throws SystemException {
+	public List<SyncDLObject> findAll() {
 		return findAll(QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
@@ -1347,11 +2043,9 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param start the lower bound of the range of sync d l objects
 	 * @param end the upper bound of the range of sync d l objects (not inclusive)
 	 * @return the range of sync d l objects
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public List<SyncDLObject> findAll(int start, int end)
-		throws SystemException {
+	public List<SyncDLObject> findAll(int start, int end) {
 		return findAll(start, end, null);
 	}
 
@@ -1366,11 +2060,10 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * @param end the upper bound of the range of sync d l objects (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of sync d l objects
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public List<SyncDLObject> findAll(int start, int end,
-		OrderByComparator orderByComparator) throws SystemException {
+		OrderByComparator<SyncDLObject> orderByComparator) {
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
@@ -1452,10 +2145,9 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	/**
 	 * Removes all the sync d l objects from the database.
 	 *
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public void removeAll() throws SystemException {
+	public void removeAll() {
 		for (SyncDLObject syncDLObject : findAll()) {
 			remove(syncDLObject);
 		}
@@ -1465,10 +2157,9 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * Returns the number of sync d l objects.
 	 *
 	 * @return the number of sync d l objects
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public int countAll() throws SystemException {
+	public int countAll() {
 		Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_ALL,
 				FINDER_ARGS_EMPTY, this);
 
@@ -1508,25 +2199,6 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	 * Initializes the sync d l object persistence.
 	 */
 	public void afterPropertiesSet() {
-		String[] listenerClassNames = StringUtil.split(GetterUtil.getString(
-					com.liferay.util.service.ServiceProps.get(
-						"value.object.listener.com.liferay.sync.model.SyncDLObject")));
-
-		if (listenerClassNames.length > 0) {
-			try {
-				List<ModelListener<SyncDLObject>> listenersList = new ArrayList<ModelListener<SyncDLObject>>();
-
-				for (String listenerClassName : listenerClassNames) {
-					listenersList.add((ModelListener<SyncDLObject>)InstanceFactory.newInstance(
-							getClassLoader(), listenerClassName));
-				}
-
-				listeners = listenersList.toArray(new ModelListener[listenersList.size()]);
-			}
-			catch (Exception e) {
-				_log.error(e);
-			}
-		}
 	}
 
 	public void destroy() {
@@ -1537,6 +2209,7 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	}
 
 	private static final String _SQL_SELECT_SYNCDLOBJECT = "SELECT syncDLObject FROM SyncDLObject syncDLObject";
+	private static final String _SQL_SELECT_SYNCDLOBJECT_WHERE_PKS_IN = "SELECT syncDLObject FROM SyncDLObject syncDLObject WHERE syncDLObjectId IN (";
 	private static final String _SQL_SELECT_SYNCDLOBJECT_WHERE = "SELECT syncDLObject FROM SyncDLObject syncDLObject WHERE ";
 	private static final String _SQL_COUNT_SYNCDLOBJECT = "SELECT COUNT(syncDLObject) FROM SyncDLObject syncDLObject";
 	private static final String _SQL_COUNT_SYNCDLOBJECT_WHERE = "SELECT COUNT(syncDLObject) FROM SyncDLObject syncDLObject WHERE ";
@@ -1545,11 +2218,11 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No SyncDLObject exists with the key {";
 	private static final boolean _HIBERNATE_CACHE_USE_SECOND_LEVEL_CACHE = GetterUtil.getBoolean(PropsUtil.get(
 				PropsKeys.HIBERNATE_CACHE_USE_SECOND_LEVEL_CACHE));
-	private static Log _log = LogFactoryUtil.getLog(SyncDLObjectPersistenceImpl.class);
-	private static Set<String> _badColumnNames = SetUtil.fromArray(new String[] {
+	private static final Log _log = LogFactoryUtil.getLog(SyncDLObjectPersistenceImpl.class);
+	private static final Set<String> _badColumnNames = SetUtil.fromArray(new String[] {
 				"size", "type"
 			});
-	private static SyncDLObject _nullSyncDLObject = new SyncDLObjectImpl() {
+	private static final SyncDLObject _nullSyncDLObject = new SyncDLObjectImpl() {
 			@Override
 			public Object clone() {
 				return this;
@@ -1561,7 +2234,7 @@ public class SyncDLObjectPersistenceImpl extends BasePersistenceImpl<SyncDLObjec
 			}
 		};
 
-	private static CacheModel<SyncDLObject> _nullSyncDLObjectCacheModel = new CacheModel<SyncDLObject>() {
+	private static final CacheModel<SyncDLObject> _nullSyncDLObjectCacheModel = new CacheModel<SyncDLObject>() {
 			@Override
 			public SyncDLObject toEntityModel() {
 				return _nullSyncDLObject;

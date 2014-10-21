@@ -82,7 +82,7 @@ public class SOAnnouncementsUserNotificationHandler
 			getBodyTemplate(), new String[] {"[$BODY$]", "[$TITLE$]"},
 			new String[] {
 				HtmlUtil.escape(
-					StringUtil.shorten(announcementEntry.getContent(), 50)),
+					StringUtil.shorten(announcementEntry.getTitle(), 70)),
 				title
 			});
 	}

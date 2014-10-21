@@ -14,9 +14,10 @@
 
 package com.liferay.pushnotifications.model;
 
+import aQute.bnd.annotation.ProviderType;
+
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -40,6 +41,7 @@ import java.util.Map;
 /**
  * @author Silvio Santos
  */
+@ProviderType
 public class PushNotificationsDeviceClp extends BaseModelImpl<PushNotificationsDevice>
 	implements PushNotificationsDevice {
 	public PushNotificationsDeviceClp() {
@@ -178,7 +180,7 @@ public class PushNotificationsDeviceClp extends BaseModelImpl<PushNotificationsD
 	}
 
 	@Override
-	public String getUserUuid() throws SystemException {
+	public String getUserUuid() {
 		try {
 			User user = UserLocalServiceUtil.getUserById(getUserId());
 
@@ -313,7 +315,7 @@ public class PushNotificationsDeviceClp extends BaseModelImpl<PushNotificationsD
 	}
 
 	@Override
-	public void persist() throws SystemException {
+	public void persist() {
 		if (this.isNew()) {
 			PushNotificationsDeviceLocalServiceUtil.addPushNotificationsDevice(this);
 		}
@@ -377,6 +379,10 @@ public class PushNotificationsDeviceClp extends BaseModelImpl<PushNotificationsD
 		else {
 			return false;
 		}
+	}
+
+	public Class<?> getClpSerializerClass() {
+		return _clpSerializerClass;
 	}
 
 	@Override
@@ -453,6 +459,7 @@ public class PushNotificationsDeviceClp extends BaseModelImpl<PushNotificationsD
 	private String _platform;
 	private String _token;
 	private BaseModel<?> _pushNotificationsDeviceRemoteModel;
+	private Class<?> _clpSerializerClass = com.liferay.pushnotifications.service.ClpSerializer.class;
 	private boolean _entityCacheEnabled;
 	private boolean _finderCacheEnabled;
 }

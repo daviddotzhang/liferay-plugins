@@ -14,7 +14,7 @@
 
 package com.liferay.pushnotifications.model.impl;
 
-import com.liferay.portal.kernel.exception.SystemException;
+import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.pushnotifications.model.PushNotificationsDevice;
 import com.liferay.pushnotifications.service.PushNotificationsDeviceLocalServiceUtil;
@@ -31,6 +31,7 @@ import com.liferay.pushnotifications.service.PushNotificationsDeviceLocalService
  * @see com.liferay.pushnotifications.model.PushNotificationsDevice
  * @generated
  */
+@ProviderType
 public abstract class PushNotificationsDeviceBaseImpl
 	extends PushNotificationsDeviceModelImpl implements PushNotificationsDevice {
 	/*
@@ -39,7 +40,7 @@ public abstract class PushNotificationsDeviceBaseImpl
 	 * Never modify or reference this class directly. All methods that expect a push notifications device model instance should use the {@link PushNotificationsDevice} interface instead.
 	 */
 	@Override
-	public void persist() throws SystemException {
+	public void persist() {
 		if (this.isNew()) {
 			PushNotificationsDeviceLocalServiceUtil.addPushNotificationsDevice(this);
 		}

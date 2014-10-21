@@ -20,15 +20,19 @@ package com.liferay.microblogs.microblogs.notifications;
 import com.liferay.microblogs.model.MicroblogsEntry;
 import com.liferay.microblogs.model.MicroblogsEntryConstants;
 import com.liferay.microblogs.service.MicroblogsEntryLocalServiceUtil;
+import com.liferay.microblogs.util.MicroblogsUtil;
 import com.liferay.microblogs.util.PortletKeys;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.notifications.BaseUserNotificationHandler;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.model.User;
 import com.liferay.portal.model.UserNotificationEvent;
 import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.service.UserNotificationEventLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
@@ -67,23 +71,69 @@ public class MicroblogsUserNotificationHandler
 			return null;
 		}
 
-		String title = StringPool.BLANK;
+		String title = getBodyTitle(microblogsEntry, serviceContext);
 
-		if (microblogsEntry.getType() == MicroblogsEntryConstants.TYPE_REPLY) {
-			String userFullName = HtmlUtil.escape(
-				PortalUtil.getUserName(
-					microblogsEntry.getUserId(), StringPool.BLANK));
-
-			title = serviceContext.translate(
-				"x-commented-on-your-post", userFullName);
-		}
+		String body = MicroblogsUtil.getProcessedContent(
+			StringUtil.shorten(microblogsEntry.getContent(), 50),
+			serviceContext);
 
 		return StringUtil.replace(
 			getBodyTemplate(), new String[] {"[$BODY$]", "[$TITLE$]"},
-			new String[] {
-				HtmlUtil.escape(
-					StringUtil.shorten(microblogsEntry.getContent(), 50)), title
-			});
+			new String[] {body, title});
+	}
+
+	protected String getBodyTitle(
+			MicroblogsEntry microblogsEntry, ServiceContext serviceContext)
+		throws PortalException {
+
+		String title = StringPool.BLANK;
+
+		String userFullName = HtmlUtil.escape(
+			PortalUtil.getUserName(
+				microblogsEntry.getUserId(), StringPool.BLANK));
+
+		long parentMicroblogsEntryId =
+			MicroblogsUtil.getParentMicroblogsEntryId(microblogsEntry);
+
+		if (MicroblogsUtil.isTaggedUser(
+				microblogsEntry.getMicroblogsEntryId(), false,
+				serviceContext.getUserId())) {
+
+			title = serviceContext.translate(
+				"x-tagged-you-in-a-post", userFullName);
+		}
+		else if (microblogsEntry.getType() ==
+					MicroblogsEntryConstants.TYPE_REPLY) {
+
+			if (MicroblogsUtil.getParentMicroblogsUserId(microblogsEntry) ==
+					serviceContext.getUserId()) {
+
+				title = serviceContext.translate(
+					"x-commented-on-your-post", userFullName);
+			}
+			else if (MicroblogsUtil.hasReplied(
+						parentMicroblogsEntryId,
+						serviceContext.getUserId())) {
+
+				User receiverUser = UserLocalServiceUtil.fetchUser(
+					microblogsEntry.getReceiverUserId());
+
+				if (receiverUser != null) {
+					title = serviceContext.translate(
+						"x-also-commented-on-x's-post", userFullName,
+						receiverUser.getFullName());
+				}
+			}
+			else if (MicroblogsUtil.isTaggedUser(
+						parentMicroblogsEntryId, true,
+						serviceContext.getUserId())) {
+
+				title = serviceContext.translate(
+					"x-commented-on-a-post-you-are-tagged-in", userFullName);
+			}
+		}
+
+		return title;
 	}
 
 	@Override
