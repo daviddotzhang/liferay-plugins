@@ -222,8 +222,6 @@ if (WebFormUtil.getTableRowsCount(company.getCompanyId(), databaseTableName) > 0
 				optionalControl.hide();
 				paragraphDiv.show();
 
-				optionalControl.all('input[type="checkbox"]').attr('checked', 'true');
-				optionalControl.all('input[type="hidden"]').attr('value', 'true');
 			}
 			else {
 				labelName.show();
